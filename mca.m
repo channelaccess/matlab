@@ -5,15 +5,16 @@ global context;
 if isempty(context)
     javaaddpath('./ca_matlab-1.0.0.jar');
     disp('Add matlab jar');
-end
-
-if isempty(context)
-    import ch.psi.jcae.*;
-    % Use of SLS configuration
+    % Use EPICS CA configuration from evironment variables
     properties = java.util.Properties();
-    properties.setProperty('EPICS_CA_ADDR_LIST', 'sls-cagw');
-    properties.setProperty('EPICS_CA_SERVER_PORT', '5062');
-    context = Context(properties);
+    properties.setProperty('EPICS_CA_ADDR_LIST', getenv('EPICS_CA_ADDR_LIST'));
+    properties.setProperty('EPICS_CA_AUTO_ADDR_LIST', getenv('EPICS_CA_AUTO_ADDR_LIST'));
+    properties.setProperty('EPICS_CA_CONN_TMO', getenv('EPICS_CA_CONN_TMO'));
+    properties.setProperty('EPICS_CA_BEACON_PERIOD', getenv('EPICS_CA_BEACON_PERIOD'));
+    properties.setProperty('EPICS_CA_REPEATER_PORT', getenv('EPICS_CA_REPEATER_PORT'));
+    properties.setProperty('EPICS_CA_SERVER_PORT', getenv('EPICS_CA_SERVER_PORT'));
+    properties.setProperty('EPICS_CA_MAX_ARRAY_BYTES', getenv('EPICS_CA_MAX_ARRAY_BYTES'));
+    context = javaObjectEDT('ch.psi.jcae.Context', properties);
     disp('MCA initialized');
 end
 
@@ -205,8 +206,9 @@ function handle = addChannel(PVName)
     global context
     global channel_table
 
-    import ch.psi.jcae.*;
-    channel = Channels.create(context, ChannelDescriptor('double', PVName));
+    channel_desc = javaObjectEDT('ch.psi.jcae.ChannelDescriptor', 'double', PVName);
+    channel = ch.psi.jcae.Channels.create(context, channel_desc);
     handle = channel.hashCode();
     channel_table(handle) = channel;
 end
+
